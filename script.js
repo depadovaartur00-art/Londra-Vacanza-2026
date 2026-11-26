@@ -137,7 +137,6 @@ function openDrawer(title, content) {
   drawer.setAttribute("aria-hidden", "false");
 }
 function closeDrawer() {
-  stopCamera();
   drawer.classList.remove("open");
   backdrop.classList.remove("open");
   drawer.setAttribute("aria-hidden", "true");
@@ -177,87 +176,7 @@ document.querySelector("#menuButton").addEventListener("click", () => {
 function readWrittenDiary() {
   return JSON.parse(localStorage.getItem("londonWrittenDiary") || "[]");
 }
-function readPhotoDiary() {
-  return JSON.parse(localStorage.getItem("londonPhotoDiary") || "[]");
-}
-
-let cameraStream = null;
-let capturedPhotoBlob = null;
-
-async function getPhotoDirectory() {
-  if (!navigator.storage?.getDirectory) throw new Error("Archivio interno non disponibile");
-  const root = await navigator.storage.getDirectory();
-  return root.getDirectoryHandle("diary-photos", { create: true });
-}
-
-async function savePhotoToInternalFolder(blob) {
-  try {
-    const directory = await getPhotoDirectory();
-    const fileName = `london-${Date.now()}.jpg`;
-    const fileHandle = await directory.getFileHandle(fileName, { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-    return fileName;
-  } catch {
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-}
-
-async function getPhotoUrl(fileName) {
-  if (!fileName) return "";
-  if (fileName.startsWith("data:image")) return fileName;
-  try {
-    const directory = await getPhotoDirectory();
-    const handle = await directory.getFileHandle(fileName);
-    const file = await handle.getFile();
-    return URL.createObjectURL(file);
-  } catch {
-    return "";
-  }
-}
-
-async function stopCamera() {
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(track => track.stop());
-    cameraStream = null;
-  }
-}
-
-async function startCamera() {
-  const video = document.querySelector("#diaryCamera");
-  if (!video) return;
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false
-    });
-    video.srcObject = cameraStream;
-    await video.play();
-  } catch (error) {
-    const status = document.querySelector("#cameraStatus");
-    status.textContent = "Apri la fotocamera del dispositivo.";
-    let capture = document.querySelector("#nativePhotoCapture");
-    if (!capture) {
-      capture = document.createElement("input");
-      capture.id = "nativePhotoCapture";
-      capture.type = "file";
-      capture.accept = "image/*";
-      capture.capture = "environment";
-      capture.className = "native-photo-input";
-      document.querySelector(".diary-entry").prepend(capture);
-    }
-  }
-}
-
 async function renderWrittenDiary() {
-  await stopCamera();
-  capturedPhotoBlob = null;
   const entries = readWrittenDiary();
   const cards = [];
   for (const entry of entries) {
@@ -278,52 +197,9 @@ async function renderWrittenDiary() {
   `);
 }
 
-async function renderPhotoDiary() {
-  await stopCamera();
-  capturedPhotoBlob = null;
-  const entries = readPhotoDiary();
-  const cards = [];
-  for (const entry of entries) {
-    const photoUrl = await getPhotoUrl(entry.photo);
-    if (photoUrl) cards.push(`
-      <article class="diary-card">
-        <time>${entry.date}</time>
-        <img class="diary-photo" src="${photoUrl}" alt="Foto del diario">
-      </article>
-    `);
-  }
-
-  openDrawer("Diario fotografico", `
-    <div class="diary-entry">
-      <input id="nativePhotoCapture" class="native-photo-input" type="file" accept="image/*" capture="environment" aria-label="Scatta foto con la fotocamera del dispositivo">
-      <div class="camera-box" id="cameraBox">
-        <video id="diaryCamera" autoplay playsinline muted></video>
-      </div>
-      <img id="capturedPreview" class="camera-preview" alt="Anteprima foto" hidden>
-      <canvas id="diaryCanvas" width="1200" height="900"></canvas>
-      <p id="cameraStatus" style="color:#77796f;font-size:10px;margin:6px 0">Attivazione fotocamera...</p>
-      <div class="camera-actions">
-        <button id="phoneCamera" type="button">Fotocamera telefono</button>
-        <button id="takePhoto" class="primary" type="button">Scatta foto</button>
-      </div>
-      <button id="savePhotoDiary" type="button" style="margin-top:8px">Salva foto</button>
-    </div>
-    ${cards.length ? cards.join("") : `<p style="color:#77796f;font-size:12px">Nessuna foto salvata.</p>`}
-  `);
-  requestAnimationFrame(() => startCamera());
-}
-
 document.querySelector("#diaryButton").addEventListener("click", renderWrittenDiary);
-document.querySelector("#photoDiaryButton").addEventListener("click", renderPhotoDiary);
 
 document.querySelector("#drawerContent").addEventListener("click", async event => {
-  const diaryTab = event.target.closest("[data-diary-tab]");
-  if (diaryTab) {
-    if (diaryTab.dataset.diaryTab === "written") await renderWrittenDiary();
-    else await renderPhotoDiary();
-    return;
-  }
-
   if (event.target.matches("#saveWrittenDiary")) {
     const text = document.querySelector("#writtenDiaryText").value.trim();
     if (!text) return;
@@ -334,66 +210,7 @@ document.querySelector("#drawerContent").addEventListener("click", async event =
     });
     localStorage.setItem("londonWrittenDiary", JSON.stringify(entries));
     await renderWrittenDiary();
-    return;
   }
-
-  if (event.target.matches("#startCamera")) {
-    await startCamera();
-    return;
-  }
-
-  if (event.target.matches("#phoneCamera")) {
-    const capture = document.querySelector("#nativePhotoCapture");
-    if (capture) capture.click();
-    return;
-  }
-
-  if (event.target.matches("#takePhoto")) {
-    const video = document.querySelector("#diaryCamera");
-    const canvas = document.querySelector("#diaryCanvas");
-    if (!video.videoWidth) {
-      const capture = document.querySelector("#nativePhotoCapture");
-      if (capture) capture.click();
-      return;
-    }
-    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-    const preview = document.querySelector("#capturedPreview");
-    preview.src = canvas.toDataURL("image/jpeg", 0.82);
-    preview.hidden = false;
-    document.querySelector("#cameraBox").hidden = true;
-    await stopCamera();
-    capturedPhotoBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.82));
-    document.querySelector("#cameraStatus").textContent = "Foto acquisita e pronta da salvare.";
-    return;
-  }
-
-  if (!event.target.matches("#savePhotoDiary") || !capturedPhotoBlob) return;
-  let photoName = "";
-  try {
-    photoName = await savePhotoToInternalFolder(capturedPhotoBlob);
-  } catch {
-    document.querySelector("#cameraStatus").textContent = "Non è stato possibile salvare la foto.";
-    return;
-  }
-  const entries = readPhotoDiary();
-  entries.unshift({
-    photo: photoName,
-    date: new Date().toLocaleString("it-IT", { dateStyle: "medium", timeStyle: "short" })
-  });
-  localStorage.setItem("londonPhotoDiary", JSON.stringify(entries));
-  await renderPhotoDiary();
-});
-
-document.querySelector("#drawerContent").addEventListener("change", async event => {
-  if (!event.target.matches("#nativePhotoCapture")) return;
-  const file = event.target.files[0];
-  if (!file) return;
-  capturedPhotoBlob = file.type === "image/jpeg" ? file : file;
-  const preview = document.querySelector("#capturedPreview");
-  preview.src = URL.createObjectURL(file);
-  preview.hidden = false;
-  await stopCamera();
-  document.querySelector("#cameraStatus").textContent = "Foto acquisita e pronta da salvare.";
 });
 
 document.querySelector("#closeDrawer").addEventListener("click", closeDrawer);
