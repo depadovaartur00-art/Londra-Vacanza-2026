@@ -38,7 +38,11 @@
     const database = await db();
     await new Promise((resolve, reject) => {
       const transaction = database.transaction("capsules", "readwrite");
-      transaction.objectStore("capsules").delete(id);
+      const store = transaction.objectStore("capsules");
+      const getRequest = store.get(id);
+      getRequest.onsuccess = () => {
+        if (getRequest.result) store.delete(id);
+      };
       transaction.oncomplete = resolve;
       transaction.onerror = () => reject(transaction.error);
     });
