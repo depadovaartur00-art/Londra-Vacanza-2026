@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
 
 :root {
-  --ink: #20231f;
-  --muted: #77796f;
-  --paper: #f4f1e8;
-  --card: #fffdf8;
-  --red: #bc4b3c;
-  --green: #4e6152;
-  --line: #ddd8cc;
+  --ink: #1d2b3a;
+  --muted: #74869a;
+  --paper: #eef4f7;
+  --card: #fbfdff;
+  --red: #477da0;
+  --green: #5d8298;
+  --line: #ccd9e2;
 }
 
 * { box-sizing: border-box; }
@@ -15,7 +15,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #dcd9cf;
+  background: #dbe5eb;
   color: var(--ink);
   font-family: "DM Sans", sans-serif;
 }
@@ -78,8 +78,8 @@ button { font: inherit; }
   justify-content: space-between;
   padding: 28px 24px 26px;
   background:
-    radial-gradient(circle at 88% 22%, rgba(188,75,60,.08), transparent 28%),
-    linear-gradient(145deg, var(--paper), #ece8dc);
+    radial-gradient(circle at 88% 22%, rgba(71,125,160,.10), transparent 28%),
+    linear-gradient(145deg, #eef4f7, #ddeaf1);
 }
 
 .eyebrow {
@@ -199,7 +199,7 @@ h1 em { color: var(--red); font-weight: 700; }
   height: 100%;
   display: grid;
   place-items: center;
-  background: #e9e6da;
+  background: #dde8ef;
   border-right: 1px solid rgba(32,35,31,.06);
 }
 .stop-icon svg { width: 25px; height: 25px; fill: none; stroke: var(--green); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -214,7 +214,7 @@ h1 em { color: var(--red); font-weight: 700; }
   margin: 10px 24px 0;
   border: 0;
   border-radius: 4px;
-  background: var(--ink);
+  background: #263e52;
   color: white;
   display: flex;
   align-items: center;
@@ -440,17 +440,17 @@ h1 em { color: var(--red); font-weight: 700; }
 .summary-actions .outside-active { border-color: var(--red); background: var(--red); color: white; }
 
 body.night {
-  --ink: #ecece5;
-  --muted: #aaa99f;
-  --paper: #171915;
-  --card: #22251f;
-  --line: #3a3d36;
-  --green: #9daa92;
-  background: #0e100d;
+  --ink: #dfeaf2;
+  --muted: #91a4b5;
+  --paper: #17232d;
+  --card: #20303d;
+  --line: #344957;
+  --green: #89aec5;
+  background: #101920;
 }
-body.night .hero { background: linear-gradient(145deg, #171915, #20231d); }
-body.night .date-tabs { background: #1d201b; }
-body.night .stop-icon { background: #30342c; }
+body.night .hero { background: linear-gradient(145deg, #17232d, #20303d); }
+body.night .date-tabs { background: #1b2a35; }
+body.night .stop-icon { background: #2a4051; }
 body.night .dot { border-color: var(--paper); }
 body.night .leg-button { background: #30342c; color: #bec8b4; }
 
