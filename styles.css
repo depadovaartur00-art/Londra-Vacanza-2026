@@ -420,6 +420,24 @@ h1 em { color: var(--red); font-weight: 700; }
 .star-button { width: 28px; height: 28px; padding: 0; border: 0; background: transparent; color: #bbb7aa; font-size: 20px; line-height: 28px; cursor: pointer; }
 .star-button.active { color: #d79a38; }
 .summary-note { width: 100%; min-height: 82px; margin-top: 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); padding: 10px; font: inherit; }
+.summary-extra {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 0;
+}
+.summary-field {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  padding: 8px;
+}
+.summary-field label { display: block; color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.summary-field input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-family: "Playfair Display", Georgia, serif; font-size: 17px; }
+.summary-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.summary-actions button { height: 38px; border: 1px solid var(--line); border-radius: 5px; background: var(--card); color: var(--ink); font-size: 10px; font-weight: 700; cursor: pointer; }
+.summary-actions .outside-active { border-color: var(--red); background: var(--red); color: white; }
 
 body.night {
   --ink: #ecece5;

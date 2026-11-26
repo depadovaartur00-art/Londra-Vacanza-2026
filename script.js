@@ -186,6 +186,19 @@ function saveDaySummary(dayIndex, summary) {
   localStorage.setItem(`londonSummary${dayIndex}`, JSON.stringify(summary));
 }
 
+function formatOutsideTime(milliseconds) {
+  const totalMinutes = Math.max(0, Math.floor(milliseconds / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+}
+
+function getOutsideDisplay(summary) {
+  let elapsed = Number(summary.outsideSeconds || 0) * 1000;
+  if (summary.outsideStartedAt) elapsed += Date.now() - Number(summary.outsideStartedAt);
+  return formatOutsideTime(elapsed);
+}
+
 function renderSummary() {
   const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
   const day = days[dayIndex];
@@ -219,6 +232,22 @@ function renderSummary() {
       <div class="summary-stat"><strong>${average}</strong><span>Voto medio</span></div>
       <div class="summary-stat"><strong>${day.stops.length}</strong><span>Da valutare</span></div>
     </div>
+    <div class="summary-extra">
+      <div class="summary-field">
+        <label for="summarySteps">Passi</label>
+        <input id="summarySteps" type="number" min="0" inputmode="numeric" value="${summary.steps || ""}" placeholder="0">
+      </div>
+      <div class="summary-field">
+        <label>Fuori casa</label>
+        <input id="outsideTime" type="text" value="${getOutsideDisplay(summary)}" readonly>
+      </div>
+    </div>
+    <div class="summary-actions">
+      <button id="toggleOutside" class="${summary.outsideStartedAt ? "outside-active" : ""}" type="button">
+        ${summary.outsideStartedAt ? "Esci dall'uscita" : "Avvia fuori casa"}
+      </button>
+      <button id="resetOutside" type="button">Azzera tempo</button>
+    </div>
     ${rows}
     <textarea id="summaryNote" class="summary-note" placeholder="Nota finale della giornata...">${summary.note || ""}</textarea>
   `);
@@ -227,6 +256,33 @@ function renderSummary() {
 document.querySelector("#summaryButton").addEventListener("click", renderSummary);
 
 document.querySelector("#drawerContent").addEventListener("click", event => {
+  const toggleOutside = event.target.closest("#toggleOutside");
+  if (toggleOutside) {
+    const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+    const summary = readDaySummary(dayIndex);
+    if (summary.outsideStartedAt) {
+      summary.outsideSeconds = (summary.outsideSeconds || 0) +
+        Math.floor((Date.now() - Number(summary.outsideStartedAt)) / 1000);
+      delete summary.outsideStartedAt;
+    } else {
+      summary.outsideStartedAt = Date.now();
+    }
+    saveDaySummary(dayIndex, summary);
+    renderSummary();
+    return;
+  }
+
+  const resetOutside = event.target.closest("#resetOutside");
+  if (resetOutside) {
+    const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+    const summary = readDaySummary(dayIndex);
+    summary.outsideSeconds = 0;
+    delete summary.outsideStartedAt;
+    saveDaySummary(dayIndex, summary);
+    renderSummary();
+    return;
+  }
+
   const star = event.target.closest("[data-rate]");
   if (!star) return;
   const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
@@ -237,6 +293,13 @@ document.querySelector("#drawerContent").addEventListener("click", event => {
 });
 
 document.querySelector("#drawerContent").addEventListener("change", event => {
+  if (event.target.matches("#summarySteps")) {
+    const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+    const summary = readDaySummary(dayIndex);
+    summary.steps = Math.max(0, Number(event.target.value) || 0);
+    saveDaySummary(dayIndex, summary);
+  }
+
   const complete = event.target.closest("[data-complete]");
   if (complete) {
     const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
@@ -258,6 +321,14 @@ document.querySelector("#drawerContent").addEventListener("change", event => {
 });
 
 document.querySelector("#drawerContent").addEventListener("input", event => {
+  if (event.target.matches("#summarySteps")) {
+    const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+    const summary = readDaySummary(dayIndex);
+    summary.steps = Math.max(0, Number(event.target.value) || 0);
+    saveDaySummary(dayIndex, summary);
+    return;
+  }
+
   if (!event.target.matches("#summaryNote")) return;
   const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
   const summary = readDaySummary(dayIndex);
