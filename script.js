@@ -269,7 +269,18 @@ async function getCurrentPosition() {
 async function renderCapsules() {
   if (activeRecorder && activeRecorder.state === "recording") activeRecorder.stop();
   clearInterval(activeRecordingTimer);
-  const capsules = await readCapsules();
+  openDrawer("Capsule sonore", `
+    <p class="capsule-status" id="capsuleStatus">Premi il pulsante per autorizzare microfono e posizione. La registrazione dura al massimo 10 secondi.</p>
+    <button class="record-button" id="recordCapsule" type="button" aria-label="Registra capsule sonora"></button>
+    <div id="capsuleList"><p style="color:#77796f;font-size:12px">Caricamento capsule...</p></div>
+  `);
+  let capsules = [];
+  try {
+    capsules = await readCapsules();
+  } catch {
+    document.querySelector("#capsuleList").innerHTML = `<p style="color:#77796f;font-size:12px">Archivio capsule non disponibile.</p>`;
+    return;
+  }
   const cards = [];
   for (const capsule of capsules) {
     const audioUrl = URL.createObjectURL(capsule.audio);
@@ -285,11 +296,8 @@ async function renderCapsules() {
     `);
   }
 
-  openDrawer("Capsule sonore", `
-    <p class="capsule-status" id="capsuleStatus">Premi il pulsante per autorizzare microfono e posizione. La registrazione dura al massimo 10 secondi.</p>
-    <button class="record-button" id="recordCapsule" type="button" aria-label="Registra capsule sonora"></button>
-    ${cards.length ? cards.join("") : `<p style="color:#77796f;font-size:12px">Nessuna capsule registrata.</p>`}
-  `);
+  document.querySelector("#capsuleList").innerHTML =
+    cards.length ? cards.join("") : `<p style="color:#77796f;font-size:12px">Nessuna capsule registrata.</p>`;
 }
 
 document.querySelector("#capsuleButton").addEventListener("click", renderCapsules);
