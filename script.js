@@ -137,7 +137,6 @@ function openDrawer(title, content) {
   drawer.setAttribute("aria-hidden", "false");
 }
 function closeDrawer() {
-  if (activeRecorder && activeRecorder.state === "recording") activeRecorder.stop();
   drawer.classList.remove("open");
   backdrop.classList.remove("open");
   drawer.setAttribute("aria-hidden", "true");
