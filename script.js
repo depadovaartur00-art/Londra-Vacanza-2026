@@ -177,6 +177,93 @@ document.querySelector("#menuButton").addEventListener("click", () => {
 function readWrittenDiary() {
   return JSON.parse(localStorage.getItem("londonWrittenDiary") || "[]");
 }
+
+function readDaySummary(dayIndex) {
+  return JSON.parse(localStorage.getItem(`londonSummary${dayIndex}`) || '{"ratings":{},"completed":[],"note":""}');
+}
+
+function saveDaySummary(dayIndex, summary) {
+  localStorage.setItem(`londonSummary${dayIndex}`, JSON.stringify(summary));
+}
+
+function renderSummary() {
+  const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+  const day = days[dayIndex];
+  const summary = readDaySummary(dayIndex);
+  const completedCount = summary.completed.length;
+  const ratings = Object.values(summary.ratings).filter(value => Number(value) > 0);
+  const average = ratings.length
+    ? (ratings.reduce((total, value) => total + Number(value), 0) / ratings.length).toFixed(1)
+    : "-";
+
+  const rows = day.stops.map((stop, stopIndex) => {
+    const rating = summary.ratings[stopIndex] || 0;
+    const completed = summary.completed.includes(stopIndex);
+    const stars = [1, 2, 3, 4, 5].map(value =>
+      `<button class="star-button ${value <= rating ? "active" : ""}" type="button" data-rate="${stopIndex}" data-value="${value}" aria-label="${value} stelle">${value <= rating ? "★" : "☆"}</button>`
+    ).join("");
+    return `
+      <div class="rate-row">
+        <label>
+          <input type="checkbox" data-complete="${stopIndex}" ${completed ? "checked" : ""}>
+          ${stop.title}
+        </label>
+        <div class="stars">${stars}</div>
+      </div>
+    `;
+  }).join("");
+
+  openDrawer("Riepilogo giornata", `
+    <div class="summary-stats">
+      <div class="summary-stat"><strong>${completedCount}/${day.stops.length}</strong><span>Tappe</span></div>
+      <div class="summary-stat"><strong>${average}</strong><span>Voto medio</span></div>
+      <div class="summary-stat"><strong>${day.stops.length}</strong><span>Da valutare</span></div>
+    </div>
+    ${rows}
+    <textarea id="summaryNote" class="summary-note" placeholder="Nota finale della giornata...">${summary.note || ""}</textarea>
+  `);
+}
+
+document.querySelector("#summaryButton").addEventListener("click", renderSummary);
+
+document.querySelector("#drawerContent").addEventListener("click", event => {
+  const star = event.target.closest("[data-rate]");
+  if (!star) return;
+  const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+  const summary = readDaySummary(dayIndex);
+  summary.ratings[star.dataset.rate] = Number(star.dataset.value);
+  saveDaySummary(dayIndex, summary);
+  renderSummary();
+});
+
+document.querySelector("#drawerContent").addEventListener("change", event => {
+  const complete = event.target.closest("[data-complete]");
+  if (complete) {
+    const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+    const summary = readDaySummary(dayIndex);
+    const stopIndex = Number(complete.dataset.complete);
+    summary.completed = complete.checked
+      ? [...new Set([...summary.completed, stopIndex])]
+      : summary.completed.filter(index => index !== stopIndex);
+    saveDaySummary(dayIndex, summary);
+    renderSummary();
+  }
+
+  if (event.target.matches("#summaryNote")) {
+    const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+    const summary = readDaySummary(dayIndex);
+    summary.note = event.target.value;
+    saveDaySummary(dayIndex, summary);
+  }
+});
+
+document.querySelector("#drawerContent").addEventListener("input", event => {
+  if (!event.target.matches("#summaryNote")) return;
+  const dayIndex = Number(document.querySelector(".date-tab.active").dataset.day);
+  const summary = readDaySummary(dayIndex);
+  summary.note = event.target.value;
+  saveDaySummary(dayIndex, summary);
+});
 async function renderWrittenDiary() {
   const entries = readWrittenDiary();
   const cards = [];

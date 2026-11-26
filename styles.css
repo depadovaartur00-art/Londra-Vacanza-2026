@@ -397,6 +397,29 @@ h1 em { color: var(--red); font-weight: 700; }
   font-weight: 700;
   cursor: pointer;
 }
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.summary-stat {
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  text-align: center;
+}
+.summary-stat strong { display: block; font-family: "Playfair Display", Georgia, serif; font-size: 22px; }
+.summary-stat span { display: block; color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
+.rate-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.rate-row label { font-size: 12px; font-weight: 700; }
+.stars { display: flex; gap: 2px; }
+.star-button { width: 28px; height: 28px; padding: 0; border: 0; background: transparent; color: #bbb7aa; font-size: 20px; line-height: 28px; cursor: pointer; }
+.star-button.active { color: #d79a38; }
+.summary-note { width: 100%; min-height: 82px; margin-top: 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); padding: 10px; font: inherit; }
 
 body.night {
   --ink: #ecece5;
