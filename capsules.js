@@ -34,6 +34,17 @@
     return result.sort((a, b) => b.createdAt - a.createdAt);
   }
 
+  async function remove(id) {
+    const database = await db();
+    await new Promise((resolve, reject) => {
+      const transaction = database.transaction("capsules", "readwrite");
+      transaction.objectStore("capsules").delete(id);
+      transaction.oncomplete = resolve;
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  }
+
   function position() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) return reject(new Error("Posizione non disponibile"));
@@ -67,12 +78,28 @@
       const link = capsule.latitude && capsule.longitude
         ? `<a href="https://www.google.com/maps/search/?api=1&query=${capsule.latitude},${capsule.longitude}" target="_blank" rel="noopener noreferrer">Apri il punto registrato · ${capsule.latitude.toFixed(5)}, ${capsule.longitude.toFixed(5)}</a>`
         : "";
-      return `<article class="capsule-card"><time>${new Date(capsule.createdAt).toLocaleString("it-IT", { dateStyle: "medium", timeStyle: "short" })}</time><audio controls src="${url}"></audio>${link}</article>`;
+      return `<article class="capsule-card" data-capsule-id="${capsule.id}">
+        <time>${new Date(capsule.createdAt).toLocaleString("it-IT", { dateStyle: "medium", timeStyle: "short" })}</time>
+        <audio controls src="${url}"></audio>
+        ${link}
+        <div class="capsule-card-actions">
+          <button class="delete-capsule" type="button" data-delete-capsule="${capsule.id}">Elimina registrazione</button>
+        </div>
+      </article>`;
     }).join("") : `<p style="color:#77796f;font-size:12px">Nessuna capsule registrata.</p>`;
   }
 
   const button = document.querySelector("#capsuleButton");
   if (button) button.addEventListener("click", render);
+
+  document.addEventListener("click", async event => {
+    const deleteButton = event.target.closest("[data-delete-capsule]");
+    if (!deleteButton) return;
+    const id = Number(deleteButton.dataset.deleteCapsule);
+    if (!window.confirm("Eliminare questa registrazione?")) return;
+    await remove(id);
+    await render();
+  });
 
   document.addEventListener("click", async event => {
     if (!event.target.closest("#recordCapsule")) return;

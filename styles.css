@@ -386,6 +386,17 @@ h1 em { color: var(--red); font-weight: 700; }
 .capsule-card audio { width: 100%; height: 38px; margin: 8px 0; }
 .capsule-card time { display: block; color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: .08em; }
 .capsule-card a { color: var(--green); font-size: 11px; font-weight: 700; text-decoration: none; }
+.capsule-card-actions { display: grid; grid-template-columns: 1fr; margin-top: 8px; }
+.delete-capsule {
+  height: 34px;
+  border: 1px solid #d2aaa2;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
 
 body.night {
   --ink: #ecece5;
